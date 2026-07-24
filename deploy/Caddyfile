@@ -1,0 +1,33 @@
+# Reverse proxy for the domain-per-bakery model.
+#
+# Every bakery's domain -- whether it's their platform subdomain
+# (sweetfig.cakeplatform.com) or a verified custom domain
+# (sweetfigbakery.com) -- terminates here and is proxied to the same
+# Next.js frontend, which resolves *which* bakery owns the request from
+# the Host header (see frontend/middleware.ts + lib/tenant.ts).
+#
+# On-demand TLS is what makes arbitrary customer-owned domains work
+# without manually provisioning a certificate per domain: instead of a
+# fixed list of hostnames, Caddy asks the backend "is this a real,
+# registered domain?" the first time it sees a hostname, and only
+# issues a certificate if the answer is yes. This is the standard,
+# low-maintenance way indie SaaS products handle bring-your-own-domain
+# -- the alternative is hand-rolling ACME/DNS automation yourself.
+
+{
+	on_demand_tls {
+		ask http://backend:8000/internal/domain-check
+	}
+}
+
+:443 {
+	tls {
+		on_demand
+	}
+
+	reverse_proxy frontend:3000
+}
+
+:80 {
+	redir https://{host}{uri} permanent
+}

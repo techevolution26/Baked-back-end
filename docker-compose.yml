@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cake
+      POSTGRES_PASSWORD: cake
+      POSTGRES_DB: cake_marketplace
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cake -d cake_marketplace"]
+      interval: 10s   # Relaxed from 5s to save CPU
+      timeout: 5s
+      retries: 5      # Reduced from 10 to speed up startup failures
+
+  backend:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://cake:cake@db:5432/cake_marketplace
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000  # Dropped --reload because Docker Watch handles restarts
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .git
+            - __pycache__
+            - .env
+        - action: rebuild
+          path: requirements.txt
+
+volumes:
+  db_data:
