@@ -1,25 +1,16 @@
 #!/bin/sh
 set -e
 
-echo "Waiting for database..."
-until python -c "
-import asyncio
-import os
-from sqlalchemy.ext.asyncio import create_async_engine
+echo "🚀 Booting development stack..."
 
-async def check():
-    engine = create_async_engine(os.environ['DATABASE_URL'])
-    async with engine.connect():
-        pass
-    await engine.dispose()
-
-asyncio.run(check())
-" 2>/dev/null; do
-  sleep 1
-done
-echo "Database is up."
-
-echo "Running migrations..."
+# Run migrations safely on boot
+echo "Applying database migrations..."
 alembic upgrade head
 
+#  Populating foundational development database datasets
+echo "Running database seeder script..."
+python seed.py
+
+echo "Starting server process..."
+# Executing whatever CMD was passed from the Dockerfile
 exec "$@"

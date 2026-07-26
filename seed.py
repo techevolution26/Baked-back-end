@@ -1,60 +1,68 @@
 """
-Quick local-dev seed script -- creates a demo owner account, a bakery
-with a platform subdomain, and one design template, so you can exercise
-domain resolution and the storefront without building bakery-signup
-flows yet.
+Quick local-dev seed script -- creates a demo owner account and a bakery
+with a platform subdomain so you can exercise domain resolution and the 
+storefront without building bakery-signup flows yet.
 
+Safe to run multiple times (Idempotent).
 Usage: python seed.py
 """
 import asyncio
+from sqlalchemy import select
 
 from app.core.security import hash_password
 from app.core.database import async_session
-from app.models import Bakery, DesignTemplate, User, UserRole
+from app.models import Bakery, User, UserRole
 
 
 async def main():
     async with async_session() as session:
-        owner = User(
-            username="sweetfig_owner",
-            password_hash=hash_password("password123"),
-            role=UserRole.bakery_owner,
-        )
-        session.add(owner)
-        await session.flush()
+        # 1. Seed or Fetch Owner Account
+        user_stmt = select(User).where(User.username == "sweetfig_owner")
+        user_result = await session.execute(user_stmt)
+        owner = user_result.scalar_one_or_none()
 
-        bakery = Bakery(
-            owner_user_id=owner.id,
-            name="Sweet Fig Bakery",
-            location="Nairobi, Kenya",
-            verified=True,
-            subdomain="sweetfig",
-            rating=5.00,  # Explicitly matches your numeric layout constraint
-        )
-        session.add(bakery)
-        await session.flush()
+        if not owner:
+            owner = User(
+                username="sweetfig_owner",
+                password_hash=hash_password("password123"),
+                role=UserRole.bakery_owner,
+            )
+            session.add(owner)
+            await session.flush()  # Populates owner.id
+            print("👤 Created demo owner account.")
+        else:
+            print("👤 Demo owner account already exists. Skipping insertion.")
 
-        owner.bakery_id = bakery.id
+        # 2. Seed or Fetch Bakery
+        bakery_stmt = select(Bakery).where(Bakery.subdomain == "sweetfig")
+        bakery_result = await session.execute(bakery_stmt)
+        bakery = bakery_result.scalar_one_or_none()
 
-        # Updated to perfectly match your new structured JSON tiers schema layout
-        template = DesignTemplate(
-           bakery_id=bakery.id,
-           name="Classic Two-Tier",
-           base_price=3500,
-           cover_image_url="https://unsplash.com",
-           tags=["birthday", "classic"],
-           layers=[],  
-           customizable_fields={"colors_editable": True, "stickers_editable": True, "max_stickers": 5},
-           is_active=True,
-           tiers=[
-               {"shape": "round"},
-               {"shape": "square"}
-            ]
-       )
-        session.add(template)
+        if not bakery:
+            bakery = Bakery(
+                owner_user_id=owner.id,
+                name="Sweet Fig Bakery",
+                location="Nairobi, Kenya",
+                verified=True,
+                subdomain="sweetfig",
+                rating=5.00,
+            )
+            session.add(bakery)
+            await session.flush()  # Populates bakery.id
+            print(f"🏪 Created bakery '{bakery.name}' on subdomain '{bakery.subdomain}'.")
+        else:
+            # Sync owner id if it somehow changed or mismatched
+            bakery.owner_user_id = owner.id
+            print(f"🏪 Bakery '{bakery.name}' already exists. Skipping insertion.")
 
+        # Ensure the structural bidirectional relation link matches
+        if owner.bakery_id != bakery.id:
+            owner.bakery_id = bakery.id
+
+        # Commit everything to the database safely
         await session.commit()
-        print(f"Seeded '{bakery.name}' at subdomain '{bakery.subdomain}'")
+        
+        print("\n✅ Seeding operations complete!")
         print("Owner login: username=sweetfig_owner password=password123")
         print(
             "Set DEV_TENANT_HOST=sweetfig.cakeplatform.test in the frontend's "
