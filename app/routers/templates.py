@@ -34,11 +34,17 @@ async def create_template(
     if not bakery:
         raise HTTPException(status_code=404, detail="You don't own a bakery yet")
 
+    if not payload.cover_image_url.strip() or "placehold.co" in payload.cover_image_url:
+        raise HTTPException(
+            status_code=422,
+            detail="A real cover photo is required -- customers order from the photo, not the customization canvas.",
+        )
+
     template = DesignTemplate(
         bakery_id=bakery.id,
         name=payload.name,
         story=payload.story,
-        base_shape=payload.base_shape,
+        tiers=[tier.model_dump() for tier in payload.tiers],
         base_price=payload.base_price,
         cover_image_url=payload.cover_image_url,
         tags=payload.tags,

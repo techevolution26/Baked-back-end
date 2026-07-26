@@ -1,9 +1,15 @@
 import uuid
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from .blueprint import BlueprintLayer
+
+
+class TierConfig(BaseModel):
+    """One tier, bottom-to-top. Shape is per-tier so a design can mix
+    e.g. a round bottom tier with a square top tier."""
+    shape: Literal["round", "square"] = "round"
 
 
 class TemplateCustomizationRules(BaseModel):
@@ -20,7 +26,7 @@ class DesignTemplateOut(BaseModel):
     bakery_id: uuid.UUID
     name: str
     story: str | None
-    base_shape: str
+    tiers: list[TierConfig]
     base_price: float
     cover_image_url: str
     tags: list[str]
@@ -31,7 +37,7 @@ class DesignTemplateOut(BaseModel):
 class DesignTemplateCreate(BaseModel):
     name: str
     story: str | None = None
-    base_shape: str
+    tiers: list[TierConfig] = Field(default_factory=lambda: [TierConfig()])
     base_price: float
     cover_image_url: str
     tags: list[str] = Field(default_factory=list)

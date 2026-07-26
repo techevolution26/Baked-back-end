@@ -12,7 +12,9 @@ class Bakery(Base):
     __tablename__ = "bakeries"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    owner_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), unique=True)
+    owner_user_id: Mapped[uuid.UUID] = mapped_column(
+    ForeignKey("users.id", name="fk_bakeries_owner_user_id_users", use_alter=True), 
+    unique=True)
     name: Mapped[str] = mapped_column(String(150))
     location: Mapped[str] = mapped_column(String(255))
     mpesa_till: Mapped[str | None] = mapped_column(String(20), nullable=True)

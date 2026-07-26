@@ -34,7 +34,11 @@ class User(Base):
     # scoped to the bakery they registered under; a bakery_owner's own
     # account is scoped to the bakery they own. Null only for
     # platform-level admins.
-    bakery_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("bakeries.id"), nullable=True, index=True)
+    bakery_id: Mapped[uuid.UUID | None] = mapped_column(
+    ForeignKey("bakeries.id", name="fk_users_bakery_id_bakeries"), 
+    nullable=True, 
+    index=True)
+    
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # The bakery this user OWNS (only meaningful for role=bakery_owner).

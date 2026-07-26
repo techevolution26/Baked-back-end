@@ -29,21 +29,28 @@ async def main():
             location="Nairobi, Kenya",
             verified=True,
             subdomain="sweetfig",
+            rating=5.00,  # Explicitly matches your numeric layout constraint
         )
         session.add(bakery)
         await session.flush()
 
         owner.bakery_id = bakery.id
 
+        # Updated to perfectly match your new structured JSON tiers schema layout
         template = DesignTemplate(
-            bakery_id=bakery.id,
-            name="Classic Two-Tier",
-            base_shape="tiered",
-            base_price=3500,
-            cover_image_url="https://placehold.co/600x600?text=Cake",
-            tags=["birthday", "classic"],
-            customizable_fields={"tiers": 2},
-        )
+           bakery_id=bakery.id,
+           name="Classic Two-Tier",
+           base_price=3500,
+           cover_image_url="https://unsplash.com",
+           tags=["birthday", "classic"],
+           layers=[],  
+           customizable_fields={"colors_editable": True, "stickers_editable": True, "max_stickers": 5},
+           is_active=True,
+           tiers=[
+               {"shape": "round"},
+               {"shape": "square"}
+            ]
+       )
         session.add(template)
 
         await session.commit()
