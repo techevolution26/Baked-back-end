@@ -37,11 +37,13 @@ async def create_template(
     template = DesignTemplate(
         bakery_id=bakery.id,
         name=payload.name,
+        story=payload.story,
         base_shape=payload.base_shape,
         base_price=payload.base_price,
         cover_image_url=payload.cover_image_url,
         tags=payload.tags,
-        customizable_fields=payload.customizable_fields,
+        layers=[layer.model_dump(exclude_none=True) for layer in payload.layers],
+        customizable_fields=payload.customizable_fields.model_dump(),
     )
     session.add(template)
     await session.commit()

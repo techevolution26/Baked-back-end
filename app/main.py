@@ -1,8 +1,11 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .core.config import get_settings
-from .routers import auth, bakeries, templates, blueprints, orders, users, internal
+from .routers import auth, bakeries, templates, blueprints, orders, users, internal, uploads
 
 settings = get_settings()
 
@@ -23,6 +26,10 @@ app.include_router(blueprints.router)
 app.include_router(orders.router)
 app.include_router(users.router)
 app.include_router(internal.router)
+app.include_router(uploads.router)
+
+os.makedirs(settings.upload_dir, exist_ok=True)
+app.mount(settings.media_url_path, StaticFiles(directory=settings.upload_dir), name="media")
 
 
 @app.get("/health")
