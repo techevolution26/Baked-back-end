@@ -30,6 +30,7 @@ services:
         condition: service_healthy
     volumes:
       - .:/app # Restores two-way sync so container-generated migrations save directly to your SSD
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     develop:
       watch:
         - action: rebuild
