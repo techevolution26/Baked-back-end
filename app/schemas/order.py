@@ -14,3 +14,4 @@ class OrderOut(BaseModel):
     payment_status: PaymentStatus
     order_status: OrderStatus
     created_at: datetime
+    customer_username: str | None = None

@@ -87,12 +87,27 @@ async def get_order(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    order = await session.get(Order, order_id)
-    if not order:
+    # Performing a joined query to pull order data along with the associated customer user profile info
+    query = (
+        select(Order, User.username)
+        .join(User, Order.customer_id == User.id)
+        .where(Order.id == order_id)
+    )
+    result = await session.execute(query)
+    row = result.first()
+
+    if not row:
         raise HTTPException(status_code=404, detail="Order not found")
+        
+    order, username = row
+
     if current_user.id != order.customer_id and current_user.role not in (
         UserRole.bakery_owner,
         UserRole.admin,
     ):
         raise HTTPException(status_code=403, detail="Not permitted")
+        
+    # Append the dynamically fetched username text straight onto the response object
+    order.customer_username = username
     return order
+
