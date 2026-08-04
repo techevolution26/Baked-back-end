@@ -3,27 +3,18 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .template import TierConfig, BlueprintLayer
+from ..services.pricing import DEFAULT_CATEGORY
 
-class BlueprintLayer(BaseModel):
-    """One entry in blueprint.layers -- matches the layer types in the system design doc."""
-    type: str
-    target: str | None = None
-    swatch_id: str | None = None
-    asset_id: str | None = None
-    x: float | None = None
-    y: float | None = None
-    scale: float | None = None
-    rotation: float | None = None
-    url: str | None = None
-    value: str | None = None
-    font: str | None = None
+__all__ = ["TierConfig", "BlueprintLayer", "BlueprintCreate", "BlueprintOut"]
 
 
 class BlueprintCreate(BaseModel):
     template_id: uuid.UUID | None = None
     bakery_id: uuid.UUID
-    tiers: list[dict[str, Any]]
-    layers: list[BlueprintLayer]
+    category: str = DEFAULT_CATEGORY
+    tiers: list[TierConfig] = Field(default_factory=lambda: [TierConfig()])
+    layers: list[BlueprintLayer] = Field(default_factory=list)
     printable_elements: list[dict[str, Any]] = Field(default_factory=list)
 
 
@@ -32,6 +23,7 @@ class BlueprintOut(BaseModel):
     id: uuid.UUID
     template_id: uuid.UUID | None
     bakery_id: uuid.UUID
-    tiers: list[dict[str, Any]]
+    category: str
+    tiers: list[TierConfig]
     layers: list[dict[str, Any]]
     preview_render_url: str | None

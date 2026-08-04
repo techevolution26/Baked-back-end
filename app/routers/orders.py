@@ -45,13 +45,12 @@ async def create_order(
     if not blueprint:
         raise HTTPException(status_code=404, detail="Blueprint not found")
 
-    base_price = Decimal("0")
+    design_price = Decimal("0")
     if blueprint.template_id:
-        template = await session.get(DesignTemplate, blueprint.template_id)
-        if template:
-            base_price = Decimal(str(template.base_price))
-
-    price = calculate_blueprint_price(base_price, blueprint.layers)
+             template = await session.get(DesignTemplate, blueprint.template_id)
+             if template:
+                design_price = Decimal(str(template.base_price))
+                price = calculate_blueprint_price(design_price, blueprint.category, blueprint.tiers, blueprint.layers)
 
     order = Order(
         blueprint_id=blueprint.id,
