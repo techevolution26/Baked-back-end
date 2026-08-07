@@ -4,8 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.services import pricing
+
 from .core.config import get_settings
-from .routers import auth, bakeries, templates, blueprints, orders, users, internal, uploads
+from .routers import auth, bakeries, templates, blueprints, orders, users, internal, uploads, pricing
 
 settings = get_settings()
 
@@ -25,6 +27,7 @@ app.include_router(templates.router)
 app.include_router(blueprints.router)
 app.include_router(orders.router)
 app.include_router(users.router)
+app.include_router(pricing.router)
 app.include_router(internal.router)
 app.include_router(uploads.router)
 

@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-
 from sqlalchemy import String, DateTime, ForeignKey, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -15,6 +14,9 @@ class Blueprint(Base):
     template_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("design_templates.id"), nullable=True)
     customer_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
     bakery_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("bakeries.id"), index=True)
+    # Flavor, e.g. "red_velvet" -- see services/pricing.CATEGORY_PRICE_PER_KG.
+    # A customer choice, independent of which visual design they picked.
+    category: Mapped[str] = mapped_column(String(50), default="vanilla")
     # The customer's actual tier structure -- usually a copy of the
     # template's tiers, same shape as DesignTemplate.tiers.
     tiers: Mapped[list[dict]] = mapped_column(JSONB, default=list)

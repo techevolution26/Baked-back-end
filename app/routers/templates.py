@@ -63,3 +63,42 @@ async def get_template(template_id: uuid.UUID, session: AsyncSession = Depends(g
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
     return template
+
+@router.put("/{template_id}", response_model=DesignTemplateOut)
+async def update_template(
+    template_id: uuid.UUID,
+    payload: DesignTemplateCreate,  # Reuse or create a DesignTemplateUpdate schema if fields are optional
+    current_user: User = Depends(require_role(UserRole.bakery_owner, UserRole.admin)),
+    session: AsyncSession = Depends(get_session),
+):
+    # 1. Fetch the template and verify existence
+    template = await session.get(DesignTemplate, template_id)
+    if not template:
+        raise HTTPException(status_code=404, detail="Design template not found")
+
+    # 2. Verify bakery ownership
+    bakery = await session.scalar(select(Bakery).where(Bakery.owner_user_id == current_user.id))
+    if not bakery or template.bakery_id != bakery.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to edit this template")
+
+    # 3. Validate the cover image
+    if not payload.cover_image_url.strip() or "placehold.co" in payload.cover_image_url:
+        raise HTTPException(
+            status_code=422,
+            detail="A real cover photo is required -- customers order from the photo, not the customization canvas.",
+        )
+
+    # 4. Update fields dynamically
+    template.name = payload.name
+    template.story = payload.story
+    template.tiers = [tier.model_dump() for tier in payload.tiers]
+    template.base_price = payload.base_price
+    template.cover_image_url = payload.cover_image_url
+    template.tags = payload.tags
+    template.layers = [layer.model_dump(exclude_none=True) for layer in payload.layers]
+    template.customizable_fields = payload.customizable_fields.model_dump()
+
+    # 5. Save changes
+    await session.commit()
+    await session.refresh(template)
+    return template

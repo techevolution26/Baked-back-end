@@ -21,7 +21,8 @@ async def create_blueprint(
         template_id=payload.template_id,
         customer_id=current_user.id,
         bakery_id=payload.bakery_id,
-        tiers=payload.tiers,
+        category=payload.category,
+        tiers=[tier.model_dump() for tier in payload.tiers],
         layers=[layer.model_dump(exclude_none=True) for layer in payload.layers],
         printable_elements=payload.printable_elements,
     )
