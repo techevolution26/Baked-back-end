@@ -1,0 +1,6 @@
+services:
+  backend:
+    # Local development: publish the backend port to the host so
+    # a host-run frontend (e.g. Next.js) can reach it at http://localhost:8000
+    ports:
+      - "8000:8000"
