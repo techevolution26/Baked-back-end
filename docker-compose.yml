@@ -23,8 +23,14 @@ services:
       - ./.env
     environment:
       DATABASE_URL: postgresql+asyncpg://cake:cake@db:5432/cake_marketplace
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
+    # In production, the backend must not be directly reachable from the host.
+    # Caddy and frontend can still access it over the Docker network.
+    # For local development only, use a separate override file or uncomment the
+    # following ports mapping temporarily.
+    # ports:
+    #   - "8000:8000"
     depends_on:
       db:
         condition: service_healthy

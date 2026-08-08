@@ -25,9 +25,9 @@
 		on_demand
 	}
 
-	reverse_proxy frontend:3000
-}
+    handle_path /media/* {
+        reverse_proxy backend:8000
+    }
 
-:80 {
 	redir https://{host}{uri} permanent
 }
