@@ -17,43 +17,43 @@ from app.models import Bakery, User, UserRole
 async def main():
     async with async_session() as session:
         # 1. Seed or Fetch Owner Account
-        user_stmt = select(User).where(User.username == "sweetfig_owner")
+        user_stmt = select(User).where(User.username == "Gracious_owner")
         user_result = await session.execute(user_stmt)
         owner = user_result.scalar_one_or_none()
 
         if not owner:
             owner = User(
-                username="sweetfig_owner",
+                username="Gracious_owner",
                 password_hash=hash_password("password123"),
                 role=UserRole.bakery_owner,
             )
             session.add(owner)
             await session.flush()  # Populates owner.id
-            print("👤 Created demo owner account.")
+            print(" Created demo owner account.")
         else:
-            print("👤 Demo owner account already exists. Skipping insertion.")
+            print("Demo owner account already exists. Skipping insertion.")
 
         # 2. Seed or Fetch Bakery
-        bakery_stmt = select(Bakery).where(Bakery.subdomain == "sweetfig")
+        bakery_stmt = select(Bakery).where(Bakery.subdomain == "gracious")
         bakery_result = await session.execute(bakery_stmt)
         bakery = bakery_result.scalar_one_or_none()
 
         if not bakery:
             bakery = Bakery(
                 owner_user_id=owner.id,
-                name="Sweet Fig Bakery",
-                location="Nairobi, Kenya",
+                name="Gracious Bakery",
+                location="KIlifi, Kenya",
                 verified=True,
-                subdomain="sweetfig",
+                subdomain="gracious",
                 rating=5.00,
             )
             session.add(bakery)
             await session.flush()  # Populates bakery.id
-            print(f"🏪 Created bakery '{bakery.name}' on subdomain '{bakery.subdomain}'.")
+            print(f" Created bakery '{bakery.name}' on subdomain '{bakery.subdomain}'.")
         else:
             # Sync owner id if it somehow changed or mismatched
             bakery.owner_user_id = owner.id
-            print(f"🏪 Bakery '{bakery.name}' already exists. Skipping insertion.")
+            print(f" Created bakery '{bakery.name}' on subdomain '{bakery.subdomain}'.")
 
         # Ensure the structural bidirectional relation link matches
         if owner.bakery_id != bakery.id:
@@ -62,10 +62,10 @@ async def main():
         # Commit everything to the database safely
         await session.commit()
         
-        print("\n✅ Seeding operations complete!")
-        print("Owner login: username=sweetfig_owner password=password123")
+        print("\n Seeding operations complete!")
+        print("Owner login: username=Gracious_owner password=@password123")
         print(
-            "Set DEV_TENANT_HOST=sweetfig.cakeplatform.test in the frontend's "
+            "Set DEV_TENANT_HOST=gracious.cakeplatform.test in the frontend's "
             ".env.local to browse this storefront locally."
         )
 
